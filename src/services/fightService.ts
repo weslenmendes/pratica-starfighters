@@ -14,9 +14,9 @@ async function userExistInGitHub(username: string) {
   try {
     const response = await axios.get(userUrl);
 
-    return response.data[0];
+    return response.data;
   } catch (e) {
-    if (e.response.status === 404) {
+    if (e.response?.status === 404) {
       throw { type: "notFound", message: `User ${username} not found` };
     }
   }
@@ -85,8 +85,19 @@ export async function makeBattle(
     userExistInGitHub(secondUser),
   ]);
 
-  const firstUserScore = fighterUser.stargazers_count;
-  const secondUserScore = anotherUser.stargazers_count;
+  const firstUserScore = fighterUser?.reduce((acc, curr) => {
+    return acc + curr.stargazers_count;
+  }, 0);
+  const secondUserScore = anotherUser?.reduce((acc, curr) => {
+    return acc + curr.stargazers_count;
+  }, 0);
+
+  if (firstUserScore === undefined || secondUserScore === undefined) {
+    throw {
+      type: "notFound",
+      message: `User ${firstUser} or ${secondUser} not found`,
+    };
+  }
 
   const isDraw = firstUserScore === secondUserScore;
   const isFirstUserTheWinner = firstUserScore > secondUserScore;
